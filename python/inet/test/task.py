@@ -12,6 +12,10 @@ class AssertionResult:
         self.result = result
 
 class TestTaskResult(TaskResult):
+    __mapper_args__ = {
+        "polymorphic_identity": "TestTaskResult",
+    }
+
     def __init__(self, task=None, result=None, expected_result="PASS", bool_result=None, assertion_results=None, possible_results=["PASS", "SKIP", "CANCEL", "FAIL", "ERROR"], possible_result_colors=[COLOR_GREEN, COLOR_CYAN, COLOR_CYAN, COLOR_YELLOW, COLOR_RED], **kwargs):
         super().__init__(task=task, result=result or ("PASS" if bool_result or bool_result is None else "FAIL"), expected_result=expected_result, possible_results=possible_results, possible_result_colors=possible_result_colors, **kwargs)
         self.locals = locals()

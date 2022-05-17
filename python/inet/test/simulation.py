@@ -11,6 +11,15 @@ from inet.test.task import *
 logger = logging.getLogger(__name__)
 
 class SimulationTestTaskResult(TestTaskResult):
+    __tablename__ = "SimulationTaskResult"
+    __mapper_args__ = {
+        "polymorphic_identity": "SimulationTestTaskResult",
+    }
+
+    simulation_task_result_id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
+    simulation_task_result_task_result_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("TaskResult.id"))
+    simulation_task_result = sqlalchemy.orm.relationship("TaskResult", foreign_keys=simulation_task_result_task_result_id, uselist=False)
+
     def __init__(self, simulation_task_result=None, **kwargs):
         super().__init__(**kwargs)
         self.locals = locals()
@@ -54,6 +63,9 @@ class SimulationTestTask(TestTask):
         self.kwargs = kwargs
         self.simulation_task = simulation_task
 
+    def get_hash(self, **kwargs):
+        return self.simulation_task.get_hash(**kwargs)
+
     def set_cancel(self, cancel):
         super().set_cancel(cancel)
         self.simulation_task.set_cancel(cancel)
@@ -88,7 +100,7 @@ class MultipleSimulationTestTasks(MultipleTestTasks):
 
     def run(self, **kwargs):
         if self.build:
-            build_project(simulation_project=self.simulation_project, **kwargs)
+            build_project(**dict(kwargs, simulation_project=self.simulation_project))
         return super().run(**kwargs)
     #     test_results = super().run(**kwargs)
     #     flattened_test_results = flatten(map(lambda test_result: test_result.get_test_results(), test_results))
