@@ -2,7 +2,19 @@
 // Copyright (C) 2011 Adriano (University of Pisa)
 // Copyright (C) 2012 OpenSim Ltd.
 //
-// SPDX-License-Identifier: LGPL-3.0-or-later
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
 #ifndef __INET_SIMPLEVOIPSENDER_H
@@ -19,7 +31,7 @@ namespace inet {
 /**
  * Implements a simple VoIP source. See the NED file for more information.
  */
-class INET_API SimpleVoipSender : public cSimpleModule, public LifecycleUnsupported
+class INET_API SimpleVoipSender : public cSimpleModule, public LifecycleUnsupported, public UdpSocket::ICallback
 {
   private:
     UdpSocket socket;
@@ -41,6 +53,12 @@ class INET_API SimpleVoipSender : public cSimpleModule, public LifecycleUnsuppor
     int talkspurtID = -1;
     int talkspurtNumPackets = 0;
     bool isTalk = false;
+
+    //adding multicast support
+    virtual void setSocketOptions();
+    virtual void socketDataArrived(UdpSocket *socket, Packet *packet) override;
+    virtual void socketErrorArrived(UdpSocket *socket, Indication *indication) override;
+    virtual void socketClosed(UdpSocket *socket) override;
 
   protected:
     void talkspurt(simtime_t dur);

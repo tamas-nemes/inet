@@ -2,7 +2,19 @@
 // Copyright (C) 2011 Adriano (University of Pisa)
 // Copyright (C) 2012 OpenSim Ltd.
 //
-// SPDX-License-Identifier: LGPL-3.0-or-later
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
 package inet.applications.voip;
@@ -50,6 +62,12 @@ simple SimpleVoipReceiver like IApp
         @statistic[playoutLossRate](title="VoIP Playout Loss Rate"; unit="ratio"; source="voipPlayoutLossRate"; record=stats,vector);
         @statistic[mos](title="VoIP MOS"; unit="MOS"; source="voipMosRate"; record=stats,vector);
         @statistic[taildropLossRate](title="VoIP Tail Drop Loss Rate"; unit="ratio"; source="voipTaildropLossRate"; record=stats,vector);
+
+        //adding multicast support
+        string interfaceTableModule;   // The path to the InterfaceTable module
+        string multicastGroup = default(""); // if non-empty, makes the socket receive multicast packets sent to that group
+        string multicastSources = default(""); // if non-empty, than the socket receives multicast packets from those sources only
+
 
         @display("i=block/source");
     gates:

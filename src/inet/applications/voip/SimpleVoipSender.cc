@@ -2,7 +2,19 @@
 // Copyright (C) 2011 Adriano (University of Pisa)
 // Copyright (C) 2012 OpenSim Ltd.
 //
-// SPDX-License-Identifier: LGPL-3.0-or-later
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
 #include "inet/applications/voip/SimpleVoipSender.h"
@@ -57,6 +69,8 @@ void SimpleVoipSender::initialize(int stage)
 
         socket.setOutputGate(gate("socketOut"));
         socket.bind(localPort);
+        //adding multicast support
+        setSocketOptions();
 
         EV_INFO << "VoIPSender::initialize - binding to port: local:" << localPort << " , dest:" << destPort << endl;
 
@@ -155,6 +169,40 @@ void SimpleVoipSender::sendVoIPPacket()
 
     if (packetID < talkspurtNumPackets)
         scheduleAfter(packetizationInterval, selfSender);
+}
+
+// adding multicast support
+void SimpleVoipSender::setSocketOptions() {
+    const char *multicastInterface = par("multicastInterface");
+    if (multicastInterface[0]) {
+        IInterfaceTable *ift = getModuleFromPar<IInterfaceTable>(par("interfaceTableModule"), this);
+        NetworkInterface *ie = ift->findInterfaceByName(multicastInterface);
+        if (!ie)
+            throw cRuntimeError("Wrong multicastInterface setting: no interface named \"%s\"", multicastInterface);
+        socket.setMulticastOutputInterface(ie->getInterfaceId());
+    }
+
+    bool joinLocalMulticastGroups = par("joinLocalMulticastGroups");
+    if (joinLocalMulticastGroups) {
+        MulticastGroupList mgl = getModuleFromPar<IInterfaceTable>(par("interfaceTableModule"), this)->collectMulticastGroups();
+        socket.joinLocalMulticastGroups(mgl);
+    }
+    socket.setCallback(this);
+}
+
+// these functions have to be overridden due to inheritance from UdpSocket::ICallback, but they're not really crucial to the functioning of our app
+void SimpleVoipSender::socketDataArrived(UdpSocket *socket, Packet *packet) {
+    delete packet; //we just swallow it, our job is to send messages out, not receive them
+}
+
+void socketErrorArrived(UdpSocket *socket, Indication *indication) {
+    //based on UdpBasicApp
+    EV_WARN << "Ignoring UDP error report " << indication->getName() << endl;
+    delete indication;
+}
+
+void socketClosed(UdpSocket *socket) {
+    //we don't have a lifecycle so this will remain empty
 }
 
 } // namespace inet
